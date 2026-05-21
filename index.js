@@ -59,11 +59,31 @@ async function getItems() {
       completed,
       category,
       TO_CHAR(due_date, 'YYYY-MM-DD') AS due_date
-    FROM items
+    FROM public.items
     ORDER BY completed ASC, due_date ASC NULLS LAST, id ASC
   `);
 
   return result.rows;
+}
+
+async function ensureDatabaseSchema() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS public.items (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL CHECK (LENGTH(TRIM(title)) > 0),
+      completed BOOLEAN NOT NULL DEFAULT false,
+      category VARCHAR(100),
+      due_date DATE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await db.query("ALTER TABLE public.items ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT false");
+  await db.query("ALTER TABLE public.items ADD COLUMN IF NOT EXISTS category VARCHAR(100)");
+  await db.query("ALTER TABLE public.items ADD COLUMN IF NOT EXISTS due_date DATE");
+  await db.query(
+    "ALTER TABLE public.items ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+  );
 }
 
 app.get("/", async (req, res) => {
@@ -95,7 +115,7 @@ app.post("/add", async (req, res) => {
   }
 
   try {
-    await db.query("INSERT INTO items (title, category, due_date) VALUES ($1, $2, $3)", [
+    await db.query("INSERT INTO public.items (title, category, due_date) VALUES ($1, $2, $3)", [
       item,
       category,
       dueDate,
@@ -120,7 +140,7 @@ app.post("/edit", async (req, res) => {
   }
 
   try {
-    await db.query("UPDATE items SET title = $1 WHERE id = $2", [item, id]);
+    await db.query("UPDATE public.items SET title = $1 WHERE id = $2", [item, id]);
     res.redirect("/");
   } catch (err) {
     console.error("Could not update todo item:", err);
@@ -137,7 +157,7 @@ app.post("/complete", async (req, res) => {
   }
 
   try {
-    await db.query("UPDATE items SET completed = $1 WHERE id = $2", [completed, id]);
+    await db.query("UPDATE public.items SET completed = $1 WHERE id = $2", [completed, id]);
     res.redirect("/");
   } catch (err) {
     console.error("Could not update todo status:", err);
@@ -153,7 +173,7 @@ app.post("/delete", async (req, res) => {
   }
 
   try {
-    await db.query("DELETE FROM items WHERE id = $1", [id]);
+    await db.query("DELETE FROM public.items WHERE id = $1", [id]);
     res.redirect("/");
   } catch (err) {
     console.error("Could not delete todo item:", err);
@@ -163,6 +183,7 @@ app.post("/delete", async (req, res) => {
 
 try {
   await db.connect();
+  await ensureDatabaseSchema();
 
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
