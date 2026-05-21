@@ -8,7 +8,7 @@ The project lets users manage a persistent todo list with saved items, completio
 
 ## 🚀 Live Demo
 
-Coming soon.
+https://the-permalist.onrender.com
 
 ---
 
