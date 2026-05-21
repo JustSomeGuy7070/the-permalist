@@ -1,0 +1,93 @@
+<%- include('partials/header.ejs'); -%>
+
+  <section class="app-shell" aria-labelledby="list-title">
+    <header class="list-header">
+      <p class="eyebrow">Permalist</p>
+      <h1 id="list-title">
+        <%= listTitle %>
+      </h1>
+    </header>
+
+    <% if (errorMessage) { %>
+      <p class="notice" role="alert"><%= errorMessage %></p>
+    <% } %>
+
+    <div class="list-panel">
+      <% for(let item of listItems){%>
+        <div class="task-row <%= item.completed ? 'completed' : '' %>" id="task<%=item.id%>">
+          <form class="complete-form" action="/complete" method="post">
+            <input type="hidden" name="itemId" value="<%= item.id %>">
+            <input type="hidden" name="completed" value="<%= !item.completed %>">
+            <input class="task-checkbox" type="checkbox" onchange="this.form.submit()" aria-label="Mark <%= item.title %> as complete" <%= item.completed ? 'checked' : '' %>>
+          </form>
+
+          <div class="task-main">
+            <div class="task-view">
+              <p class="task-title">
+                <%= item.title %>
+              </p>
+
+              <% if (item.category || item.due_date) { %>
+                <div class="task-meta">
+                  <% if (item.category) { %>
+                    <span><%= item.category %></span>
+                  <% } %>
+                  <% if (item.due_date) { %>
+                    <time datetime="<%= item.due_date %>"><%= item.due_date %></time>
+                  <% } %>
+                </div>
+              <% } %>
+            </div>
+
+            <form class="edit-form" action="/edit" method="post" hidden>
+              <input type="hidden" name="updatedItemId" value="<%= item.id %>">
+              <input class="edit-input" type="text" name="updatedItemTitle" value="<%= item.title %>" autocomplete="off" required />
+              <button class="icon-button save-button" type="submit" aria-label="Save <%= item.title %>">
+                <img class="icon" src="/assets/icons/check-solid.svg" alt="">
+              </button>
+            </form>
+          </div>
+
+          <div class="task-actions">
+            <button class="icon-button edit-button" type="button" onclick="handler('<%=item.id%>')" aria-label="Edit <%= item.title %>">
+              <img class="icon" src="/assets/icons/pencil-solid.svg" alt="">
+            </button>
+
+            <form action="/delete" method="post">
+              <input type="hidden" name="deleteItemId" value="<%= item.id %>">
+              <button class="icon-button delete-button" type="submit" aria-label="Delete <%= item.title %>">&times;</button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+
+      <form class="new-task-form" action="/add" method="post">
+        <div class="new-task-fields">
+          <input type="text" name="newItem" placeholder="New Item" autocomplete="off" autofocus="true" required />
+          <div class="supporting-fields">
+            <input type="text" name="category" placeholder="Category" autocomplete="off" />
+            <input type="date" name="dueDate" aria-label="Due date" />
+          </div>
+        </div>
+        <button class="add-button" type="submit" name="list" value="<%=listTitle %>" aria-label="Add todo item">+</button>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    function handler(id) {
+      const task = document.getElementById("task" + id)
+      const view = task.querySelector(".task-view")
+      const form = task.querySelector(".edit-form")
+      const input = task.querySelector(".edit-input")
+      const editButton = task.querySelector(".edit-button")
+
+      task.classList.add("is-editing")
+      view.setAttribute("hidden", true)
+      form.removeAttribute("hidden")
+      editButton.setAttribute("hidden", true)
+      input.focus()
+      input.select()
+    }
+  </script>
+  <%- include('partials/footer.ejs'); -%>

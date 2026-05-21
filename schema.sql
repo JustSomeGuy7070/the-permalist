@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS items (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL CHECK (LENGTH(TRIM(title)) > 0),
+  completed BOOLEAN NOT NULL DEFAULT false,
+  category VARCHAR(100),
+  due_date DATE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Use these statements if you already created the tutorial version of the table.
+ALTER TABLE items ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE items ADD COLUMN IF NOT EXISTS category VARCHAR(100);
+ALTER TABLE items ADD COLUMN IF NOT EXISTS due_date DATE;
+ALTER TABLE items ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
